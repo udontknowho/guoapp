@@ -182,15 +182,13 @@ class _PlayerScreenState extends State<PlayerScreen>
     widget.store.addListener(_accessChanged);
     _player =
         widget.playerFactory?.call() ??
-        (Platform.isAndroid
-            ? LunaExoPlayer()
-            : Player(
-                configuration: const PlayerConfiguration(
-                  bufferSize: 32 * 1024 * 1024,
-                  logLevel: MPVLogLevel.error,
-                ),
-              ));
-    _video = widget.videoBuilder == null && !Platform.isAndroid
+        Player(
+          configuration: PlayerConfiguration(
+            bufferSize: Platform.isAndroid ? 8 * 1024 * 1024 : 32 * 1024 * 1024,
+            logLevel: MPVLogLevel.error,
+          ),
+        );
+    _video = widget.videoBuilder == null
         ? VideoController(
             _player,
             configuration: VideoControllerConfiguration(
@@ -1045,7 +1043,9 @@ class _PlayerScreenState extends State<PlayerScreen>
         _plan = plan;
         installed = true;
         _acceptErrors = true;
-        DiaryService.add('[Play] 调用 _player.open: url=${plan.url}, headers=${plan.headers.keys.toList()}');
+        DiaryService.add(
+          '[Play] player=${_player.runtimeType} key=${plan.decryptionKey.isNotEmpty} url=${plan.url}',
+        );
         await _player.open(
           Media(
             plan.url,
